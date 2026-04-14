@@ -1,0 +1,90 @@
+| ============================================================
+| Detection: Lateral Movement
+| ATT&CK: T1021 — Remote Services
+| Covers: SMB/PsExec, WMI, WinRM
+| ============================================================
+
+| DETECTION 1: PsExec Lateral Movement
+| ATT&CK: T1021.002 — SMB/Windows Admin Shares
+| Data Source: Sysmon Event ID 1 (ProcessCreate), Security 4697
+
+index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1
+(
+    Image="*\\psexec.exe" OR Image="*\\psexesvc.exe"
+    OR (ParentImage="*\\services.exe" CommandLine="*\\ADMIN$*")
+)
+| table _time, Image, CommandLine, ParentImage, User, host
+| sort -_time
+
+
+| ============================================================
+| DETECTION 2: WMI Remote Execution
+| ATT&CK: T1021.003 — Distributed Component Object Model / T1047
+| Data Source: Sysmon Event ID 1
+| ============================================================
+
+index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1
+Image="*\\WmiPrvSE.exe" ParentImage="*\\svchost.exe"
+NOT CommandLine IN ("*wmiprvse*", "*wbem*")
+| eval suspicious = if(match(CommandLine, "(?i)(powershell|cmd|mshta|rundll32|regsvr32|certutil)"), "YES", "NO")
+| where suspicious="YES"
+| table _time, Image, CommandLine, ParentImage, User, host
+| sort -_time
+
+
+| ============================================================
+| DETECTION 3: WMI Process Spawn from Network
+| Catches commands executed remotely via WMI
+| ============================================================
+
+index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1
+ParentImage="*\\WmiPrvSE.exe"
+NOT Image IN (
+    "C:\\Windows\\System32\\wbem\\mofcomp.exe",
+    "C:\\Windows\\System32\\wbem\\WmiApSrv.exe"
+)
+| table _time, Image, CommandLine, ParentImage, User, host
+| sort -_time
+
+
+| ============================================================
+| DETECTION 4: WinRM Lateral Movement
+| ATT&CK: T1021.006 — Windows Remote Management
+| Data Source: WinRM Operational log + Sysmon Network (Event ID 3)
+| ============================================================
+
+index=windows source="XmlWinEventLog:Microsoft-Windows-WinRM/Operational"
+EventCode IN (6, 169)
+| table _time, EventCode, Message, host
+| sort -_time
+
+| ============================================================
+| DETECTION 5: SMB Lateral Movement — Network Connections
+| Data Source: Sysmon Event ID 3 (NetworkConnect)
+| ============================================================
+
+index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=3
+DestinationPort=445 Initiated=true
+NOT SourceIp IN ("127.0.0.1", "::1")
+NOT Image IN (
+    "C:\\Windows\\System32\\svchost.exe",
+    "C:\\Windows\\System32\\lsass.exe"
+)
+| stats count by Image, SourceIp, DestinationIp, DestinationPort, host
+| where count > 2
+| sort -count
+
+
+| ============================================================
+| DETECTION 6: Pass-the-Hash Indicators
+| ATT&CK: T1550.002
+| Data Source: Windows Security Event 4624
+| ============================================================
+
+index=windows EventCode=4624
+Logon_Type=3
+NOT Account_Name IN ("*$", "ANONYMOUS LOGON")
+Authentication_Package="NTLM"
+| stats count by Account_Name, Workstation_Name, Source_Network_Address, Logon_Type
+| where count > 3
+| sort -count

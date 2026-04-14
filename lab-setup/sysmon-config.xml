@@ -1,0 +1,213 @@
+<!--
+  Sysmon Configuration — Adversary Emulation Lab
+  Based on SwiftOnSecurity/sysmon-config, tuned for ATT&CK TTP detection.
+  Focus: Credential dumping, lateral movement, persistence, execution.
+
+  Install: Sysmon64.exe -accepteula -i sysmon-config.xml
+  Update:  Sysmon64.exe -c sysmon-config.xml
+-->
+
+<Sysmon schemaversion="4.90">
+  <HashAlgorithms>md5,sha256,imphash</HashAlgorithms>
+  <CheckRevocation/>
+
+  <EventFiltering>
+
+    <!-- ==================== PROCESS CREATION (Event ID 1) ==================== -->
+    <RuleGroup name="" groupRelation="or">
+      <ProcessCreate onmatch="include">
+
+        <!-- Credential Dumping — T1003 -->
+        <Rule name="LSASS Access via Task Manager" groupRelation="and">
+          <Image condition="is">C:\Windows\System32\taskmgr.exe</Image>
+        </Rule>
+        <Rule name="ProcDump Usage">
+          <Image condition="end with">procdump.exe</Image>
+        </Rule>
+        <Rule name="Mimikatz Indicators">
+          <CommandLine condition="contains any">sekurlsa;lsadump;kerberos;privilege::debug</CommandLine>
+        </Rule>
+
+        <!-- Execution — T1059 PowerShell -->
+        <Rule name="PowerShell Execution">
+          <Image condition="end with">powershell.exe</Image>
+        </Rule>
+        <Rule name="PowerShell Encoded Command">
+          <CommandLine condition="contains any">-enc;-EncodedCommand;-ec </CommandLine>
+        </Rule>
+        <Rule name="WMIC Execution">
+          <Image condition="end with">wmic.exe</Image>
+        </Rule>
+
+        <!-- Lateral Movement — T1021 -->
+        <Rule name="PsExec Usage">
+          <Image condition="end with">psexec.exe</Image>
+        </Rule>
+        <Rule name="PsExec Service">
+          <Image condition="end with">psexesvc.exe</Image>
+        </Rule>
+
+        <!-- Persistence — T1053 Scheduled Tasks -->
+        <Rule name="Scheduled Task Creation">
+          <Image condition="end with">schtasks.exe</Image>
+        </Rule>
+        <Rule name="AT Command">
+          <Image condition="end with">at.exe</Image>
+        </Rule>
+
+        <!-- Persistence — T1547 Registry Run Keys -->
+        <Rule name="Reg.exe Modification">
+          <Image condition="end with">reg.exe</Image>
+          <CommandLine condition="contains any">Run;RunOnce;CurrentVersion\Run</CommandLine>
+        </Rule>
+
+        <!-- Discovery -->
+        <Rule name="Net Commands">
+          <Image condition="end with">net.exe</Image>
+        </Rule>
+        <Rule name="Whoami Execution">
+          <Image condition="end with">whoami.exe</Image>
+        </Rule>
+        <Rule name="IPConfig">
+          <Image condition="end with">ipconfig.exe</Image>
+        </Rule>
+
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- ==================== NETWORK CONNECTION (Event ID 3) ==================== -->
+    <RuleGroup name="" groupRelation="or">
+      <NetworkConnect onmatch="include">
+
+        <!-- C2 Beaconing — catch outbound connections from common lolbins -->
+        <Rule name="PowerShell Network">
+          <Image condition="end with">powershell.exe</Image>
+        </Rule>
+        <Rule name="WMIC Network">
+          <Image condition="end with">wmic.exe</Image>
+        </Rule>
+        <Rule name="Rundll32 Network">
+          <Image condition="end with">rundll32.exe</Image>
+        </Rule>
+        <Rule name="Regsvr32 Network">
+          <Image condition="end with">regsvr32.exe</Image>
+        </Rule>
+        <Rule name="Mshta Network">
+          <Image condition="end with">mshta.exe</Image>
+        </Rule>
+
+        <!-- Lateral Movement ports -->
+        <Rule name="SMB Connections" groupRelation="and">
+          <DestinationPort condition="is">445</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+        <Rule name="WinRM Connections" groupRelation="and">
+          <DestinationPort condition="is">5985</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+        <Rule name="RDP Connections" groupRelation="and">
+          <DestinationPort condition="is">3389</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- ==================== DRIVER LOAD (Event ID 6) ==================== -->
+    <RuleGroup name="" groupRelation="or">
+      <DriverLoad onmatch="include">
+        <Rule name="Unsigned Driver">
+          <Signature condition="is not signed">true</Signature>
+        </Rule>
+      </DriverLoad>
+    </RuleGroup>
+
+    <!-- ==================== IMAGE LOAD (Event ID 7) ==================== -->
+    <RuleGroup name="" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <!-- Credential Dumping DLL loads -->
+        <Rule name="LSASS DLL Load">
+          <ImageLoaded condition="contains any">samlib.dll;vaultcli.dll;winscard.dll</ImageLoaded>
+        </Rule>
+        <Rule name="PowerShell AMSI Bypass">
+          <ImageLoaded condition="end with">amsi.dll</ImageLoaded>
+          <Image condition="end with">powershell.exe</Image>
+        </Rule>
+      </ImageLoad>
+    </RuleGroup>
+
+    <!-- ==================== PROCESS ACCESS (Event ID 10) ==================== -->
+    <RuleGroup name="" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <!-- LSASS memory read — T1003.001 -->
+        <Rule name="LSASS Access">
+          <TargetImage condition="end with">lsass.exe</TargetImage>
+        </Rule>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- ==================== FILE CREATION (Event ID 11) ==================== -->
+    <RuleGroup name="" groupRelation="or">
+      <FileCreate onmatch="include">
+        <!-- Temp locations commonly used for staging -->
+        <Rule name="Temp File Creation">
+          <TargetFilename condition="contains any">
+            \Temp\;
+            \AppData\Local\Temp\;
+            \AppData\Roaming\
+          </TargetFilename>
+          <Image condition="end with">powershell.exe</Image>
+        </Rule>
+        <!-- Scheduled task XML files -->
+        <Rule name="Scheduled Task File">
+          <TargetFilename condition="contains">\Tasks\</TargetFilename>
+        </Rule>
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- ==================== REGISTRY (Event ID 12, 13, 14) ==================== -->
+    <RuleGroup name="" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <!-- Persistence via Run keys — T1547.001 -->
+        <Rule name="Run Key Persistence">
+          <TargetObject condition="contains any">
+            \CurrentVersion\Run;
+            \CurrentVersion\RunOnce;
+            \CurrentVersion\RunServices
+          </TargetObject>
+        </Rule>
+        <!-- T1546 Event Triggered Execution -->
+        <Rule name="Debugger Hijacking">
+          <TargetObject condition="contains">Image File Execution Options</TargetObject>
+        </Rule>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- ==================== PIPE CREATED (Event ID 17) ==================== -->
+    <RuleGroup name="" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <!-- Named pipes used by common offensive tools -->
+        <Rule name="Metasploit Named Pipe">
+          <PipeName condition="contains any">meterpreter;msagent</PipeName>
+        </Rule>
+        <Rule name="PsExec Named Pipe">
+          <PipeName condition="begin with">PSEXESVC</PipeName>
+        </Rule>
+      </PipeEvent>
+    </RuleGroup>
+
+    <!-- ==================== DNS QUERY (Event ID 22) ==================== -->
+    <RuleGroup name="" groupRelation="or">
+      <DnsQuery onmatch="include">
+        <!-- Catch DNS from lolbins — potential C2 -->
+        <Rule name="PowerShell DNS">
+          <Image condition="end with">powershell.exe</Image>
+        </Rule>
+        <Rule name="Rundll32 DNS">
+          <Image condition="end with">rundll32.exe</Image>
+        </Rule>
+      </DnsQuery>
+    </RuleGroup>
+
+  </EventFiltering>
+</Sysmon>

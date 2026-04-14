@@ -1,0 +1,11 @@
+# Screenshots (add manually)
+*.png
+*.jpg
+
+# Sensitive notes
+*-private*
+*-creds*
+
+# OS
+.DS_Store
+Thumbs.db

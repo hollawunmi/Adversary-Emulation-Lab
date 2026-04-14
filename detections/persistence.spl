@@ -1,0 +1,88 @@
+| ============================================================
+| Detection: Persistence Mechanisms
+| ATT&CK: T1053 (Scheduled Tasks), T1547 (Registry Run Keys),
+|          T1543 (Services), T1037 (Boot/Logon Init Scripts)
+| ============================================================
+
+| DETECTION 1: Scheduled Task Creation via CLI
+| ATT&CK: T1053.005
+| Data Source: Sysmon Event ID 1
+
+index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1
+Image="*\\schtasks.exe" CommandLine="*/create*"
+| eval suspicious = case(
+    match(CommandLine, "(?i)(powershell|cmd|mshta|wscript|cscript|rundll32|regsvr32|certutil)"), "HIGH",
+    match(CommandLine, "(?i)(\\AppData\\|\\Temp\\|\\Public\\)"), "HIGH",
+    match(CommandLine, "(?i)(/sc onlogon|/sc onstart|/sc minute)"), "MEDIUM",
+    true(), "LOW"
+)
+| table _time, CommandLine, User, suspicious, host
+| sort -_time
+
+
+| ============================================================
+| DETECTION 2: Scheduled Task XML Written to Disk
+| Data Source: Sysmon Event ID 11 (FileCreate)
+| ============================================================
+
+index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=11
+TargetFilename="*\\Windows\\System32\\Tasks\\*"
+NOT Image IN (
+    "C:\\Windows\\System32\\svchost.exe",
+    "C:\\Windows\\System32\\taskeng.exe",
+    "C:\\Windows\\SysWOW64\\svchost.exe"
+)
+| table _time, Image, TargetFilename, User, host
+| sort -_time
+
+
+| ============================================================
+| DETECTION 3: Registry Run Key Persistence
+| ATT&CK: T1547.001
+| Data Source: Sysmon Event ID 13 (RegistryValueSet)
+| ============================================================
+
+index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=13
+TargetObject IN (
+    "*\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\*",
+    "*\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\*",
+    "*\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\*",
+    "*\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunServices\\*"
+)
+NOT Image IN (
+    "C:\\Windows\\regedit.exe",
+    "C:\\Windows\\System32\\reg.exe"
+)
+| table _time, Image, TargetObject, Details, User, host
+| sort -_time
+
+
+| ============================================================
+| DETECTION 4: New Service Installation
+| ATT&CK: T1543.003 — Create or Modify System Process: Windows Service
+| Data Source: Windows Security 4697 / System 7045
+| ============================================================
+
+index=windows EventCode IN (4697, 7045)
+NOT Service_Name IN ("SplunkForwarder", "Sysmon64", "WinDefend", "MpsSvc")
+| table _time, EventCode, Service_Name, Service_File_Name, Service_Account, host
+| sort -_time
+
+
+| ============================================================
+| DETECTION 5: Startup Folder Persistence
+| ATT&CK: T1547.001
+| Data Source: Sysmon Event ID 11 (FileCreate)
+| ============================================================
+
+index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=11
+TargetFilename IN (
+    "*\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\*",
+    "*\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\*"
+)
+NOT Image IN (
+    "C:\\Windows\\explorer.exe",
+    "C:\\Windows\\System32\\msiexec.exe"
+)
+| table _time, Image, TargetFilename, User, host
+| sort -_time
