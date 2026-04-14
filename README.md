@@ -43,7 +43,7 @@ See [`lab-setup/`](lab-setup/) for full configuration files and setup instructio
 1. Deploy Caldera server (Linux VM or Docker)
 2. Deploy Windows 10 victim VM (isolated network)
 3. Install Sysmon with tuned config on victim
-4. Configure Windows Event Forwarding to Splunk
+4. Configure Splunk inputs.conf to ingest Windows and Sysmon logs
 5. Install Caldera agent (Sandcat) on victim
 6. Import ATT&CK Navigator layer for coverage tracking
 
@@ -55,7 +55,7 @@ Each folder under [`operations/`](operations/) documents a full emulation run:
 
 | Operation | Threat Group | Techniques | Status |
 |-----------|-------------|------------|--------|
-| [APT29 - Op1](operations/apt29-op1/) | APT29 (Cozy Bear) | T1003, T1021, T1053, T1059 | In Progress |
+| [APT29 - Op1](operations/apt29-op1/) | APT29 (Cozy Bear) | T1003, T1021, T1053, T1059 | Planned |
 
 ---
 
@@ -65,10 +65,10 @@ SPL queries for each ATT&CK technique are in [`detections/`](detections/).
 
 | Technique | ID | Detection File | Coverage |
 |-----------|-----|---------------|----------|
-| Credential Dumping (LSASS) | T1003.001 | [credential-dumping.spl](detections/credential-dumping.spl) | Partial |
-| Remote Services (WMI) | T1021.003 | [lateral-movement.spl](detections/lateral-movement.spl) | Partial |
-| Scheduled Task | T1053.005 | [persistence.spl](detections/persistence.spl) | Partial |
-| PowerShell Execution | T1059.001 | [powershell-execution.spl](detections/powershell-execution.spl) | Partial |
+| Credential Dumping (LSASS) | T1003.001 | [credential-dumping.spl](detections/credential-dumping.spl) | Untested |
+| Remote Services (WMI) | T1021.003 | [lateral-movement.spl](detections/lateral-movement.spl) | Untested |
+| Scheduled Task | T1053.005 | [persistence.spl](detections/persistence.spl) | Untested |
+| PowerShell Execution | T1059.001 | [powershell-execution.spl](detections/powershell-execution.spl) | Untested |
 
 ---
 
