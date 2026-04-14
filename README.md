@@ -13,7 +13,7 @@ A home lab that simulates real-world cyberattacks using MITRE Caldera and measur
 │  ┌──────────────────┐      ┌──────────────────────┐  │
 │  │  Caldera Server  │─────▶│  Windows 10 Victim   │  │
 │  │  (Attacker VM)   │ C2   │  + Sysmon            │  │
-│  │                  │      │  + WEF               │  │
+│  │                  │      │  + inputs.conf       │  │
 │  └──────────────────┘      └──────────┬───────────┘  │
 │                                        │ logs         │
 │                            ┌──────────▼───────────┐  │
