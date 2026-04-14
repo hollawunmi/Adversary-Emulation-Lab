@@ -1,7 +1,3 @@
-# Screenshots (add manually)
-*.png
-*.jpg
-
 # Sensitive notes
 *-private*
 *-creds*
