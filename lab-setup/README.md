@@ -1,138 +1,101 @@
-# Lab Setup Guide
+# Lab Setup
 
-Step-by-step instructions to build the Adversary Emulation & Detection Validation Lab from scratch.
-
----
-
-## Prerequisites
-
-- Host machine with at least 16GB RAM and 100GB free disk
-- VirtualBox or VMware Workstation
-- Internet access for downloads
+This document covers the full configuration of the adversary emulation lab environment.
 
 ---
 
-## Step 1 — Network Design
+## Environment Overview
 
-Create an **isolated host-only network** in VirtualBox/VMware so the victim VM cannot reach the internet but can communicate with Caldera and Splunk.
-
-```
-Network: 192.168.56.0/24
-Caldera Server: 192.168.56.10
-Windows Victim:  192.168.56.20
-Splunk:          192.168.56.30  (or run on host)
-```
+| Component | Details |
+|---|---|
+| Host Machine | Windows 11, VirtualBox 7.x |
+| Attacker VM | Kali Linux (Caldera C2 server) |
+| Victim VM | Windows 10 22H2 |
+| SIEM | Splunk Enterprise Free (localhost:8000) |
+| Network | Host-Only Adapter (isolated) |
 
 ---
 
-## Step 2 — Deploy Caldera Server
+## Step 1 — Sysmon Installation
 
-**Option A: Docker (recommended)**
-```bash
-git clone https://github.com/mitre/caldera.git --recursive
-cd caldera
-docker-compose up -d
+Sysmon v15.20 was installed on the Windows 10 victim VM using an Administrator command prompt.
+
+```cmd
+Sysmon64.exe -accepteula -i
 ```
 
-**Option B: Python**
-```bash
-git clone https://github.com/mitre/caldera.git --recursive
-cd caldera
-pip3 install -r requirements.txt
-python3 server.py --insecure
+The SwiftOnSecurity configuration was then applied:
+
+```cmd
+Sysmon64.exe -c sysmonconfig-export.xml
 ```
 
-Access the UI at: `http://192.168.56.10:8888`
-Default creds: `admin / admin`
+Confirmation output:
+- Configuration file validated
+- Configuration updated
 
-Enable plugins: `response`, `stockpile`, `compass`
-
----
-
-## Step 3 — Set Up Windows 10 Victim VM
-
-1. Install Windows 10 22H2 (evaluation ISO from Microsoft)
-2. Assign static IP: `192.168.56.20`
-3. Disable Windows Defender (for lab purposes)
-4. Install Sysmon (see Step 4)
-5. Configure WEF (see Step 5)
-6. Deploy Caldera Sandcat agent (see Step 6)
+![Sysmon installed](screenshots/01-sysmon-installed.png)
+![Sysmon config applied](screenshots/02-sysmon-config-applied.png)
 
 ---
 
-## Step 4 — Install Sysmon
+## Step 2 — Splunk Configuration
 
-Download Sysmon from Sysinternals. Use the config in this repo:
+Splunk Enterprise Free was installed on the Windows 10 victim VM and accessed at http://localhost:8000.
 
-```powershell
-# Run as Administrator on the victim VM
-Invoke-WebRequest -Uri "https://download.sysinternals.com/files/Sysmon.zip" -OutFile Sysmon.zip
-Expand-Archive Sysmon.zip -DestinationPath C:\Sysmon
-C:\Sysmon\Sysmon64.exe -accepteula -i C:\sysmon-config.xml
+The following inputs.conf was created at:
+`C:\Program Files\Splunk\etc\system\local\inputs.conf`
+
+[WinEventLog://Application]
+index = main
+disabled = false
+[WinEventLog://Security]
+index = main
+disabled = false
+[WinEventLog://Microsoft-Windows-Sysmon/Operational]
+index = main
+disabled = false
+renderXml = true
+
+
+Splunk was restarted after saving:
+
+```cmd
+cd "C:\Program Files\Splunk\bin"
+splunk restart
 ```
 
-Copy `sysmon-config.xml` from this repo to the victim VM before running the above.
-
-Verify Sysmon is running:
-```powershell
-Get-Service Sysmon64
-```
+![inputs.conf saved](screenshots/04-splunk-inputs-conf-saved.png)
 
 ---
 
-## Step 5 — Configure Windows Event Forwarding (WEF)
+## Step 3 — Verification
 
-On the victim VM, configure WEF to ship logs to Splunk's Universal Forwarder.
+Sysmon logs confirmed flowing into Splunk using this search: index=main source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" | head 20
 
-**Install Splunk Universal Forwarder on victim VM:**
-```powershell
-# Download from splunk.com, then:
-msiexec.exe /i splunkforwarder.msi RECEIVING_INDEXER="192.168.56.30:9997" /quiet
-```
+Result: 20 events returned confirming live Sysmon telemetry ingestion.
 
-Copy `splunk-inputs.conf` from this repo to:
-`C:\Program Files\SplunkUniversalForwarder\etc\system\local\inputs.conf`
-
-Restart the forwarder:
-```powershell
-Restart-Service SplunkForwarder
-```
+![Sysmon logs verified in Splunk](screenshots/05-sysmon-logs-verified-in-splunk.png)
 
 ---
 
-## Step 6 — Deploy Caldera Agent (Sandcat)
+## Step 4 — GitHub Repository
 
-In Caldera UI: **Agents > Deploy Agent > choose Windows**
+Project repository created and pushed to GitHub:
 
-Copy the generated PowerShell one-liner and run it on the victim VM as Administrator.
+- Repository: https://github.com/hollawunmi/Adversary-Emulation-Lab
+- Initial commit: 12 files including README, SPL detections, Sysmon config, operation templates and Navigator layer
 
-Verify the agent appears in Caldera UI under **Agents**.
-
----
-
-## Step 7 — Configure Splunk
-
-1. Install Splunk Free on a Linux VM or the host machine
-2. Enable receiving on port 9997: **Settings > Forwarding and Receiving**
-3. Create an index called `windows`
-4. Install the **Splunk Add-on for Microsoft Sysmon** from Splunkbase
-5. Verify events are flowing: search `index=windows` in Splunk
+![GitHub push successful](screenshots/06-github-push-successful.png)
+![GitHub repo live](screenshots/07-github-repo-live.png)
 
 ---
 
-## Step 8 — Set Up ATT&CK Navigator
+## Current Status
 
-Open ATT&CK Navigator in your browser:
-`https://mitre-attack.github.io/attack-navigator/`
-
-Import the layer file from `navigator/coverage-layer.json` to see your technique coverage.
-
----
-
-## Validation Checklist
-
-- [ ] Caldera UI accessible
-- [ ] Sandcat agent checked in to Caldera
-- [ ] Sysmon service running on victim
-- [ ] Splunk receiving events (`index=windows` returns results)
-- [ ] ATT&CK Navigator layer loaded
+- [x] Sysmon v15.20 installed and configured
+- [x] Splunk ingesting Windows and Sysmon logs
+- [x] GitHub repo live with full project structure
+- [ ] Caldera installed on Kali VM
+- [ ] Network connectivity verified between VMs
+- [ ] First Caldera operation run
