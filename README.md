@@ -55,21 +55,19 @@ Each folder under [`operations/`](operations/) documents a full emulation run:
 
 | Operation | Threat Group | Techniques | Status |
 |-----------|-------------|------------|--------|
-| [APT29 - Op1](operations/apt29-op1/) | APT29 (Cozy Bear) | T1003, T1021, T1053, T1059 | Planned |
+| [APT29 - Op1](operations/apt29-op1/) | APT29 (Cozy Bear) | T1003, T1053, T1057, T1059 | ✅ Completed |
 
 ---
 
 ## Detections
 
 SPL queries for each ATT&CK technique are in [`detections/`](detections/).
-
 | Technique | ID | Detection File | Coverage |
-|-----------|-----|---------------|----------|
-| Credential Dumping (LSASS) | T1003.001 | [credential-dumping.spl](detections/credential-dumping.spl) | Untested |
-| Remote Services (WMI) | T1021.003 | [lateral-movement.spl](detections/lateral-movement.spl) | Untested |
-| Scheduled Task | T1053.005 | [persistence.spl](detections/persistence.spl) | Untested |
-| PowerShell Execution | T1059.001 | [powershell-execution.spl](detections/powershell-execution.spl) | Untested |
-
+|-----------|-----|---------------|---------|
+| Credential Dumping (NPPSpy + cmdkey) | T1003 | [credential-dumping.spl](detections/credential-dumping.spl) | ✅ Detected |
+| Scheduled Task Persistence | T1053.005 | [persistence.spl](detections/persistence.spl) | ✅ Detected |
+| Process Discovery | T1057 | [lateral-movement.spl](detections/lateral-movement.spl) | ✅ Detected |
+| PowerShell Execution Bypass | T1059.001 | [powershell-execution.spl](detections/powershell-execution.spl) | ✅ Detected |
 ---
 
 ## ATT&CK Coverage
