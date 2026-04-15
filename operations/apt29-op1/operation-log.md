@@ -1,107 +1,63 @@
-# Operation Log — APT29 Emulation (Op 1)
+# APT29 Operation 1 — Log
 
-**Threat Group:** APT29 (Cozy Bear)  
-**Date:** <!-- fill in when you run -->  
-**Caldera Operation Name:** apt29-op1  
-**Operator:** <!-- your name -->  
-**Victim Host:** Windows 10 VM (192.168.56.20)  
-**Caldera Server:** 192.168.56.10:8888  
-**Objective:** Simulate APT29 TTPs and measure Splunk detection coverage before and after tuning.
-
----
-
-## Pre-Operation Checklist
-
-- [ ] Caldera server running and accessible
-- [ ] Sandcat agent checked in on victim
-- [ ] Sysmon running on victim (`Get-Service Sysmon64`)
-- [ ] Splunk receiving events (`index=windows` returns results)
-- [ ] Snapshot taken of victim VM (clean state)
+## Operation Overview
+- **Date:** April 14, 2026
+- **Platform:** MITRE Caldera 5.3.0
+- **Adversary Profile:** APT29 (Cozy Bear)
+- **Target:** Windows 10 VM (DESKTOP-Q5S7I33)
+- **Agent:** Sandcat (HTTP beacon, elevated privileges)
+- **Detection Stack:** Splunk + Sysmon v15.20
 
 ---
 
-## Techniques Executed
+## TTPs Executed
 
-| # | Technique | ATT&CK ID | Caldera Ability | Result |
-|---|-----------|-----------|----------------|--------|
-| 1 | PowerShell execution | T1059.001 | | |
-| 2 | LSASS memory dump | T1003.001 | | |
-| 3 | Scheduled task persistence | T1053.005 | | |
-| 4 | Registry run key | T1547.001 | | |
-| 5 | WMI remote execution | T1047 | | |
-| 6 | SMB lateral movement | T1021.002 | | |
-| 7 | Network discovery | T1046 | | |
-| 8 | Account discovery | T1087 | | |
-
----
-
-## Pre-Tuning Detection Results
-
-*Run the operation, then check Splunk. Fill in what fired.*
-
-| Technique | ATT&CK ID | Alert Fired? | Alert Name | Notes |
-|-----------|-----------|-------------|------------|-------|
-| PowerShell execution | T1059.001 | | | |
-| LSASS memory dump | T1003.001 | | | |
-| Scheduled task | T1053.005 | | | |
-| Registry run key | T1547.001 | | | |
-| WMI execution | T1047 | | | |
-| SMB lateral movement | T1021.002 | | | |
-| Network discovery | T1046 | | | |
-| Account discovery | T1087 | | | |
-
-**Coverage Before:** __ / 8 techniques detected (__ %)
+| # | Technique | ID | Status | Detected |
+|---|-----------|-----|--------|---------|
+| 1 | Change PowerShell Execution Policy to Bypass | T1059.001 | Success | ✅ Yes |
+| 2 | Credential Dumping with NPPSpy | T1003 | Collected | ✅ Yes |
+| 3 | Cached Credential Dump via Cmdkey | T1003 | Success | ✅ Yes |
+| 4 | Import XML Scheduled Task with Hidden Attribute | T1053.005 | Success | ✅ Yes |
+| 5 | System Network Configuration Discovery | T1016 | Success | ⚠️ Partial |
+| 6 | System Information Discovery | T1082 | Success | ⚠️ Partial |
+| 7 | Process Discovery - Get-Process | T1057 | Success | ✅ Yes |
+| 8 | Process Discovery - tasklist | T1057 | Success | ✅ Yes |
 
 ---
 
-## Detection Gaps & Tuning Actions
+## Detection Results
 
-*Document what missed and what you changed.*
+| Detection Rule | ATT&CK ID | Events Found | Result |
+|---------------|-----------|-------------|--------|
+| PowerShell Execution Policy Bypass | T1059.001 | 5 | 🟢 Detected |
+| Credential Dumping - NPPSpy + cmdkey | T1003 | 2 | 🟢 Detected |
+| Scheduled Task via RegisterByXml | T1053.005 | 1 | 🟢 Detected |
+| Process Discovery - tasklist/Get-Process | T1057 | 2 | 🟢 Detected |
 
-| Gap | Root Cause | Fix Applied |
-|-----|-----------|-------------|
-| | | |
-| | | |
-
----
-
-## Post-Tuning Detection Results
-
-*Re-run operation after tuning SPL queries / Sysmon config.*
-
-| Technique | ATT&CK ID | Alert Fired? | Alert Name |
-|-----------|-----------|-------------|------------|
-| PowerShell execution | T1059.001 | | |
-| LSASS memory dump | T1003.001 | | |
-| Scheduled task | T1053.005 | | |
-| Registry run key | T1547.001 | | |
-| WMI execution | T1047 | | |
-| SMB lateral movement | T1021.002 | | |
-| Network discovery | T1046 | | |
-| Account discovery | T1087 | | |
-
-**Coverage After:** __ / 8 techniques detected (__ %)  
-**Coverage Delta:** +__ techniques detected after tuning
-
----
-
-## Screenshots
-
-- `before-coverage.png` — ATT&CK Navigator heatmap before tuning
-- `after-coverage.png` — ATT&CK Navigator heatmap after tuning
+**Overall Coverage: 4/7 techniques = 57% detected**
 
 ---
 
 ## Key Findings
 
-<!-- What did you learn? What surprised you? -->
+1. **PowerShell abuse was the most active TTP** — 5 separate events showing Caldera
+   using PowerShell with ExecutionPolicy Bypass to run malicious commands.
 
-1. 
-2. 
-3. 
+2. **Credential harvesting was partially successful** — NPPSpy was installed and
+   cmdkey was used to list saved credentials. Both were detected by Sysmon.
+
+3. **Scheduled task persistence was stealthy** — used XML import method with hidden
+   attribute to avoid basic schtasks detection. Detected via RegisterByXml in CommandLine.
+
+4. **Windows Defender initially blocked Sandcat** — flagged as
+   Trojan:Win64/SandCat.RTSIMTB. Required real-time protection disabled to deploy.
+   This is realistic — real APT29 uses signed binaries to bypass AV.
 
 ---
 
-## SPL Queries Used
-
-See [`../../detections/`](../../detections/) for all SPL queries referenced in this operation.
+## Screenshots
+- ![Caldera Running](screenshots/01-caldera-running.png)
+- ![Agent Deployed](screenshots/02-agent-deployed.png)
+- ![Operation Results](screenshots/03-operation-results.png)
+- ![Splunk Events](screenshots/04-splunk-before-tuning.png)
+- ![Detection Coverage](screenshots/05-detection-coverage.png)
