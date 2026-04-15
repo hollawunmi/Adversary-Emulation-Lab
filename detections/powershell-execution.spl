@@ -1,100 +1,11 @@
-| ============================================================
-| Detection: Malicious PowerShell Execution
-| ATT&CK: T1059.001 — Command and Scripting Interpreter: PowerShell
-| Data Source: Sysmon Event ID 1, PowerShell Operational (Event 4104)
-| ============================================================
+| Detection 1: PowerShell Execution Policy Bypass (T1059.001)
+| Trigger: powershell.exe launched with -ExecutionPolicy Bypass
+| Severity: High
+| ATT&CK: T1059.001 - Command and Scripting Interpreter: PowerShell
 
-| DETECTION 1: PowerShell with Suspicious Flags
-| Catches common attacker patterns for bypassing logging/execution policy
-
-index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1
-Image="*\\powershell.exe"
-(
-    CommandLine="*-enc*" OR CommandLine="*-EncodedCommand*"
-    OR CommandLine="*-nop*" OR CommandLine="*-NonInteractive*"
-    OR CommandLine="*-w hidden*" OR CommandLine="*-WindowStyle Hidden*"
-    OR CommandLine="*bypass*" OR CommandLine="*-exec bypass*"
-    OR CommandLine="*IEX*" OR CommandLine="*Invoke-Expression*"
-    OR CommandLine="*DownloadString*" OR CommandLine="*WebClient*"
-)
-| eval risk = case(
-    match(CommandLine, "(?i)(-enc|-EncodedCommand)"), "HIGH",
-    match(CommandLine, "(?i)(IEX|Invoke-Expression|DownloadString)"), "HIGH",
-    match(CommandLine, "(?i)(-w hidden|-WindowStyle Hidden)"), "MEDIUM",
-    match(CommandLine, "(?i)(bypass)"), "MEDIUM",
-    true(), "LOW"
-)
-| table _time, CommandLine, ParentImage, User, risk, host
-| sort -_time
-
-
-| ============================================================
-| DETECTION 2: PowerShell Script Block Logging
-| ATT&CK: T1059.001
-| Data Source: PowerShell Operational Log (Event 4104)
-| Requires: Script Block Logging enabled via GPO
-| ============================================================
-
-index=windows source="XmlWinEventLog:Microsoft-Windows-PowerShell/Operational" EventCode=4104
-(
-    Message="*Invoke-Mimikatz*" OR Message="*Invoke-ReflectivePEInjection*"
-    OR Message="*Get-GPPPassword*" OR Message="*Invoke-UserHunter*"
-    OR Message="*Find-LocalAdminAccess*" OR Message="*Invoke-Shellcode*"
-    OR Message="*PowerSploit*" OR Message="*Empire*"
-    OR Message="*AmsiUtils*" OR Message="*amsiInitFailed*"
-    OR Message="*Net.WebClient*" OR Message="*DownloadFile*"
-)
-| table _time, Message, host
-| sort -_time
-
-
-| ============================================================
-| DETECTION 3: PowerShell Download Cradle
-| Catches common one-liner download-and-execute patterns
-| ============================================================
-
-index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1
-Image="*\\powershell.exe"
-(
-    CommandLine="*Net.WebClient*"
-    OR CommandLine="*Invoke-WebRequest*"
-    OR CommandLine="*Start-BitsTransfer*"
-    OR CommandLine="*[System.Net.WebClient]*"
-    OR CommandLine="*http://*" OR CommandLine="*https://*"
-)
-| table _time, CommandLine, ParentImage, User, host
-| sort -_time
-
-
-| ============================================================
-| DETECTION 4: PowerShell Spawned from Office / Browser
-| Catches macro-launched or browser-launched PowerShell
-| ============================================================
-
-index=windows source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1
-Image="*\\powershell.exe"
-ParentImage IN (
-    "*\\WINWORD.EXE", "*\\EXCEL.EXE", "*\\POWERPNT.EXE",
-    "*\\OUTLOOK.EXE", "*\\mshta.exe", "*\\wscript.exe",
-    "*\\cscript.exe", "*\\chrome.exe", "*\\firefox.exe",
-    "*\\iexplore.exe", "*\\msedge.exe"
-)
-| table _time, Image, CommandLine, ParentImage, User, host
-| sort -_time
-
-
-| ============================================================
-| DETECTION 5: AMSI Bypass Attempt
-| Detects common patterns used to disable AMSI
-| ============================================================
-
-index=windows source="XmlWinEventLog:Microsoft-Windows-PowerShell/Operational" EventCode=4104
-(
-    Message="*amsiInitFailed*"
-    OR Message="*AmsiUtils*"
-    OR Message="*[Ref].Assembly.GetType*"
-    OR Message="*System.Management.Automation.AmsiUtils*"
-    OR Message="*amsi.dll*"
-)
-| table _time, Message, host
-| sort -_time
+index=main source="WinEventLog:Microsoft-Windows-Sysmon/Operational"
+| rex field=_raw "CommandLine'>(?<CommandLine>[^<]+)"
+| rex field=_raw "Image'>(?<Image>[^<]+)"
+| search Image="*powershell*" CommandLine="*ExecutionPolicy Bypass*"
+| table _time, Image, CommandLine
+| sort _time
