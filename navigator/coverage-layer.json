@@ -1,122 +1,148 @@
 {
-  "name": "APT29 Op1 - Detection Coverage",
-  "versions": {
-    "attack": "14",
-    "navigator": "4.9",
-    "layer": "4.5"
-  },
-  "domain": "enterprise-attack",
-  "description": "APT29 emulation lab - detection coverage results. Green = detected, Yellow = partial, Red = not detected.",
-  "filters": {
-    "platforms": ["Windows"]
-  },
-  "sorting": 0,
-  "layout": {
-    "layout": "side",
-    "aggregateFunction": "average",
-    "showID": true,
-    "showName": true,
-    "showAggregateScores": false,
-    "countUnscored": false
-  },
-  "hideDisabled": false,
-  "techniques": [
-    {
-      "techniqueID": "T1059.001",
-      "tactic": "execution",
-      "color": "#4caf50",
-      "comment": "DETECTED - PowerShell ExecutionPolicy Bypass caught by Sysmon EventID 1. 5 events detected.",
-      "enabled": true,
-      "metadata": [],
-      "showSubtechniques": true
-    },
-    {
-      "techniqueID": "T1003",
-      "tactic": "credential-access",
-      "color": "#4caf50",
-      "comment": "DETECTED - NPPSpy DLL installation and cmdkey credential listing caught. 2 events detected.",
-      "enabled": true,
-      "metadata": [],
-      "showSubtechniques": true
-    },
-    {
-      "techniqueID": "T1003.005",
-      "tactic": "credential-access",
-      "color": "#4caf50",
-      "comment": "DETECTED - Cached credential dump via cmdkey detected.",
-      "enabled": true,
-      "metadata": [],
-      "showSubtechniques": true
-    },
-    {
-      "techniqueID": "T1053.005",
-      "tactic": "persistence",
-      "color": "#4caf50",
-      "comment": "DETECTED - Scheduled task created via RegisterByXml caught by Sysmon. 1 event detected.",
-      "enabled": true,
-      "metadata": [],
-      "showSubtechniques": true
-    },
-    {
-      "techniqueID": "T1057",
-      "tactic": "discovery",
-      "color": "#4caf50",
-      "comment": "DETECTED - Process discovery via tasklist and Get-Process caught. 2 events detected.",
-      "enabled": true,
-      "metadata": [],
-      "showSubtechniques": true
-    },
-    {
-      "techniqueID": "T1016",
-      "tactic": "discovery",
-      "color": "#ffeb3b",
-      "comment": "PARTIAL - System network configuration discovery executed but no specific detection rule written yet.",
-      "enabled": true,
-      "metadata": [],
-      "showSubtechniques": true
-    },
-    {
-      "techniqueID": "T1082",
-      "tactic": "discovery",
-      "color": "#ffeb3b",
-      "comment": "PARTIAL - System information discovery executed but no specific detection rule written yet.",
-      "enabled": true,
-      "metadata": [],
-      "showSubtechniques": true
-    },
-    {
-      "techniqueID": "T1112",
-      "tactic": "defense-evasion",
-      "color": "#4caf50",
-      "comment": "DETECTED - PowerShell execution policy registry modification detected.",
-      "enabled": true,
-      "metadata": [],
-      "showSubtechniques": true
-    }
-  ],
-  "gradient": {
-    "colors": ["#ff6666", "#ffe766", "#8ec843"],
-    "minValue": 0,
-    "maxValue": 100
-  },
-  "legendItems": [
-    {
-      "label": "Detected",
-      "color": "#4caf50"
-    },
-    {
-      "label": "Partial Detection",
-      "color": "#ffeb3b"
-    },
-    {
-      "label": "Not Detected",
-      "color": "#ff6666"
-    }
-  ],
-  "metadata": [],
-  "links": [],
-  "showTacticRowBackground": true,
-  "tacticRowBackground": "#1a1a2e",
-  "selectTechniquesAcrossTactics": false,
-  "selectSubtechniquesWithParent": false
+	"name": "APT29 Op1 - Detection Coverage",
+	"versions": {
+		"attack": "14",
+		"navigator": "5.3.1",
+		"layer": "4.5"
+	},
+	"domain": "enterprise-attack",
+	"description": "APT29 emulation lab - detection coverage results. Green = detected, Yellow = partial, Red = not detected.",
+	"filters": {
+		"platforms": [
+			"Windows"
+		]
+	},
+	"sorting": 0,
+	"layout": {
+		"layout": "side",
+		"aggregateFunction": "average",
+		"showID": true,
+		"showName": true,
+		"showAggregateScores": false,
+		"countUnscored": false,
+		"expandedSubtechniques": "none"
+	},
+	"hideDisabled": false,
+	"techniques": [
+		{
+			"techniqueID": "T1059.001",
+			"tactic": "execution",
+			"color": "#4caf50",
+			"comment": "DETECTED - PowerShell ExecutionPolicy Bypass caught by Sysmon EventID 1. 5 events detected.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": true
+		},
+		{
+			"techniqueID": "T1003",
+			"tactic": "credential-access",
+			"color": "#4caf50",
+			"comment": "DETECTED - NPPSpy DLL installation and cmdkey credential listing caught. 2 events detected.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": true
+		},
+		{
+			"techniqueID": "T1003.005",
+			"tactic": "credential-access",
+			"color": "#4caf50",
+			"comment": "DETECTED - Cached credential dump via cmdkey detected.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": true
+		},
+		{
+			"techniqueID": "T1053.005",
+			"tactic": "persistence",
+			"color": "#4caf50",
+			"comment": "DETECTED - Scheduled task created via RegisterByXml caught by Sysmon. 1 event detected.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": true
+		},
+		{
+			"techniqueID": "T1057",
+			"tactic": "discovery",
+			"color": "#4caf50",
+			"comment": "DETECTED - Process discovery via tasklist and Get-Process caught. 2 events detected.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": true
+		},
+		{
+			"techniqueID": "T1016",
+			"tactic": "discovery",
+			"color": "#ffeb3b",
+			"comment": "PARTIAL - System network configuration discovery executed but no specific detection rule written yet.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": true
+		},
+		{
+			"techniqueID": "T1082",
+			"tactic": "discovery",
+			"color": "#ffeb3b",
+			"comment": "PARTIAL - System information discovery executed but no specific detection rule written yet.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": true
+		},
+		{
+			"techniqueID": "T1112",
+			"tactic": "defense-evasion",
+			"color": "#4caf50",
+			"comment": "DETECTED - PowerShell execution policy registry modification detected.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": true
+		},
+		{
+			"techniqueID": "T1059",
+			"tactic": "execution",
+			"color": "",
+			"comment": "",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": true
+		}
+	],
+	"gradient": {
+		"colors": [
+			"#ff6666ff",
+			"#ffe766ff",
+			"#8ec843ff"
+		],
+		"minValue": 0,
+		"maxValue": 100
+	},
+	"legendItems": [
+		{
+			"color": "#4caf50",
+			"label": "Detected"
+		},
+		{
+			"color": "#ffeb3b",
+			"label": "Partial Detection"
+		},
+		{
+			"color": "#ff6666",
+			"label": "Not Detected"
+		}
+	],
+	"metadata": [],
+	"links": [],
+	"showTacticRowBackground": true,
+	"tacticRowBackground": "#1a1a2e",
+	"selectTechniquesAcrossTactics": false,
+	"selectSubtechniquesWithParent": false,
+	"selectVisibleTechniques": false
 }
