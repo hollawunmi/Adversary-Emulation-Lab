@@ -1,12 +1,12 @@
 {
-  "name": "APT29 Emulation Lab — Coverage Layer",
+  "name": "APT29 Op1 - Detection Coverage",
   "versions": {
     "attack": "14",
     "navigator": "4.9",
     "layer": "4.5"
   },
   "domain": "enterprise-attack",
-  "description": "Adversary Emulation & Detection Validation Lab — tracks which ATT&CK techniques were tested (red) vs detected (green) vs partially detected (yellow). Update colors as you complete operations.",
+  "description": "APT29 emulation lab - detection coverage results. Green = detected, Yellow = partial, Red = not detected.",
   "filters": {
     "platforms": ["Windows"]
   },
@@ -17,116 +17,106 @@
     "showID": true,
     "showName": true,
     "showAggregateScores": false,
-    "countUnscored": false,
-    "expandedSubtechniques": "annotated"
+    "countUnscored": false
   },
   "hideDisabled": false,
   "techniques": [
     {
       "techniqueID": "T1059.001",
       "tactic": "execution",
-      "color": "#ff6666",
-      "comment": "Executed via Caldera. Detection: partial — catches encoded commands, misses some direct invocations.",
+      "color": "#4caf50",
+      "comment": "DETECTED - PowerShell ExecutionPolicy Bypass caught by Sysmon EventID 1. 5 events detected.",
       "enabled": true,
       "metadata": [],
-      "links": [],
       "showSubtechniques": true
     },
     {
-      "techniqueID": "T1003.001",
+      "techniqueID": "T1003",
       "tactic": "credential-access",
-      "color": "#ff6666",
-      "comment": "LSASS memory dump executed. Detection: partial — Event ID 10 fires but requires tuning of GrantedAccess masks.",
+      "color": "#4caf50",
+      "comment": "DETECTED - NPPSpy DLL installation and cmdkey credential listing caught. 2 events detected.",
       "enabled": true,
       "metadata": [],
-      "links": [],
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1003.005",
+      "tactic": "credential-access",
+      "color": "#4caf50",
+      "comment": "DETECTED - Cached credential dump via cmdkey detected.",
+      "enabled": true,
+      "metadata": [],
       "showSubtechniques": true
     },
     {
       "techniqueID": "T1053.005",
       "tactic": "persistence",
-      "color": "#ff6666",
-      "comment": "Scheduled task created via schtasks.exe. Detection: pending.",
+      "color": "#4caf50",
+      "comment": "DETECTED - Scheduled task created via RegisterByXml caught by Sysmon. 1 event detected.",
       "enabled": true,
       "metadata": [],
-      "links": [],
       "showSubtechniques": true
     },
     {
-      "techniqueID": "T1547.001",
-      "tactic": "persistence",
-      "color": "#ff6666",
-      "comment": "Registry Run key added. Detection: pending.",
-      "enabled": true,
-      "metadata": [],
-      "links": [],
-      "showSubtechniques": true
-    },
-    {
-      "techniqueID": "T1047",
-      "tactic": "execution",
-      "color": "#ff6666",
-      "comment": "WMI remote execution. Detection: pending.",
-      "enabled": true,
-      "metadata": [],
-      "links": [],
-      "showSubtechniques": false
-    },
-    {
-      "techniqueID": "T1021.002",
-      "tactic": "lateral-movement",
-      "color": "#ff6666",
-      "comment": "SMB / PsExec lateral movement. Detection: pending.",
-      "enabled": true,
-      "metadata": [],
-      "links": [],
-      "showSubtechniques": true
-    },
-    {
-      "techniqueID": "T1046",
+      "techniqueID": "T1057",
       "tactic": "discovery",
-      "color": "#ff6666",
-      "comment": "Network scan / discovery. Detection: pending.",
+      "color": "#4caf50",
+      "comment": "DETECTED - Process discovery via tasklist and Get-Process caught. 2 events detected.",
       "enabled": true,
       "metadata": [],
-      "links": [],
-      "showSubtechniques": false
+      "showSubtechniques": true
     },
     {
-      "techniqueID": "T1087",
+      "techniqueID": "T1016",
       "tactic": "discovery",
-      "color": "#ff6666",
-      "comment": "Account discovery via net commands. Detection: pending.",
+      "color": "#ffeb3b",
+      "comment": "PARTIAL - System network configuration discovery executed but no specific detection rule written yet.",
       "enabled": true,
       "metadata": [],
-      "links": [],
-      "showSubtechniques": false
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1082",
+      "tactic": "discovery",
+      "color": "#ffeb3b",
+      "comment": "PARTIAL - System information discovery executed but no specific detection rule written yet.",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1112",
+      "tactic": "defense-evasion",
+      "color": "#4caf50",
+      "comment": "DETECTED - PowerShell execution policy registry modification detected.",
+      "enabled": true,
+      "metadata": [],
+      "showSubtechniques": true
     }
   ],
   "gradient": {
-    "colors": ["#ff6666", "#ffff66", "#66ff66"],
+    "colors": ["#ff6666", "#ffe766", "#8ec843"],
     "minValue": 0,
     "maxValue": 100
   },
   "legendItems": [
     {
-      "label": "Executed — Not Detected",
+      "label": "Detected",
+      "color": "#4caf50"
+    },
+    {
+      "label": "Partial Detection",
+      "color": "#ffeb3b"
+    },
+    {
+      "label": "Not Detected",
       "color": "#ff6666"
-    },
-    {
-      "label": "Executed — Partial Detection",
-      "color": "#ffff66"
-    },
-    {
-      "label": "Executed — Fully Detected",
-      "color": "#66ff66"
     }
   ],
   "metadata": [],
   "links": [],
   "showTacticRowBackground": true,
-  "tacticRowBackground": "#dddddd",
-  "selectTechniquesAcrossTactics": true,
-  "selectSubtechniquesWithParent": false,
-  "selectVisibleTechniques": false
+  "tacticRowBackground": "#1a1a2e",
+  "selectTechniquesAcrossTactics": false,
+  "selectSubtechniquesWithParent": false
 }
