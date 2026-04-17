@@ -6,21 +6,7 @@ A home lab that simulates real-world cyberattacks using MITRE Caldera and measur
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    Host Machine                      │
-│                                                      │
-│  ┌──────────────────┐      ┌──────────────────────┐  │
-│  │  Caldera Server  │─────▶│  Windows 10 Victim   │  │
-│  │  (Attacker VM)   │ C2   │  + Sysmon            │  │
-│  │                  │      │  + inputs.conf       │  │
-│  └──────────────────┘      └──────────┬───────────┘  │
-│                                        │ logs         │
-│                            ┌──────────▼───────────┐  │
-│                            │  Splunk Free (SIEM)  │  │
-│                            │  + ATT&CK Navigator  │  │
-│                            └──────────────────────┘  │
-└─────────────────────────────────────────────────────┘
+![Lab Architecture](lab-architecture.png)
 ```
 
 ## Tools
