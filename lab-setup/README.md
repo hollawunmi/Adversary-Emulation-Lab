@@ -96,6 +96,6 @@ Project repository created and pushed to GitHub:
 - [x] Sysmon v15.20 installed and configured
 - [x] Splunk ingesting Windows and Sysmon logs
 - [x] GitHub repo live with full project structure
-- [ ] Caldera installed on Kali VM
-- [ ] Network connectivity verified between VMs
-- [ ] First Caldera operation run
+- [×] Caldera installed on Kali VM
+- [×] Network connectivity verified between VMs
+- [×] First Caldera operation run
